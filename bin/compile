@@ -30,14 +30,14 @@ if [[ ! -d $source_dir ]]; then
    git clone https://github.com/rofl0r/proxychains-ng.git $source_dir 2>&1 | indent
 else
     head "Updating cached ProxyChains sources"
-    pushd $source_dir 2>&1 | indent
+    pushd $source_dir > /dev/null
     git clean -fd . 2>&1 | indent
     git checkout master 2>&1 | indent
     git pull --rebase 2>&1 | indent
-    popd 2>&1 | indent
+    popd > /dev/null
 fi
 
-pushd $source_dir 2>&1 | indent
+pushd $source_dir > /dev/null
 version_tag=$(git describe --tags| cut -d- -f1)
 cached_build_dir=$base_dir/proxychains-ng-$version_tag
 
@@ -49,7 +49,7 @@ if [[ ! -d $cached_build_dir ]]; then
     make 2>&1 | indent
     DESTDIR=$cached_build_dir make install 2>&1 | indent
 fi
-popd 2>&1 | indent
+popd > /dev/null
 
 head "Installing ProxyChains into the slug"
 mkdir -p $build_dir/.profile.d 2>&1 | indent
@@ -57,8 +57,8 @@ rm -f $build_dir/.profile.d/proxychains-ng.sh 2>&1 | indent
 echo 'export PATH="/app/vendor/proxychains-ng/bin:$PATH"' >> $build_dir/.profile.d/proxychains-ng.sh 2>&1 | indent
 echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/vendor/proxychains-ng/lib";' >> $build_dir/.profile.d/proxychains-ng.sh 2>&1 | indent
 
-pushd $cached_build_dir/app 2>&1 | indent
+pushd $cached_build_dir/app > /dev/null
 cp -rv ./ $build_dir 2>&1 | indent
-popd 2>&1 | indent
+popd > /dev/null
 
 exit 0

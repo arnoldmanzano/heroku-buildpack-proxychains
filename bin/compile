@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+set -e
+set -o pipefail
+
+build_dir=$(readlink -f $1)
+cache_dir=$(readlink -f $2)
+env_dir=$3
+
+base_dir=$cache_dir/proxychains-ng
+source_dir=$base_dir/source
+mkdir -p $base_dir
+
+if [[ ! -d $source_dir ]]; then
+   git clone https://github.com/rofl0r/proxychains-ng.git $source_dir
+else
+    pushd $source_dir
+    git clean -fd .
+    git checkout master
+    git pull --rebase
+    popd
+fi
+
+pushd $source_dir
+version_tag=$(git describe --tags| cut -d- -f1)
+cached_build_dir=$base_dir/proxychains-ng-$version_tag
+
+if [[ ! -d $cached_build_dir ]]; then
+    make clean
+    git co $version_tag
+    ./configure --prefix=/app/vendor/proxychains-ng
+    make
+    DESTDIR=$cached_build_dir make install
+fi
+popd
+
+mkdir -p $build_dir/.profile.d
+rm -f $build_dir/.profile.d/proxychains-ng.sh
+echo 'export PATH="/app/vendor/proxychains-ng/bin:$PATH"' >> $build_dir/.profile.d/proxychains-ng.sh
+echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/vendor/proxychains-ng/lib";' >> $build_dir/.profile.d/proxychains-ng.sh
+
+pushd $cached_build_dir/app
+cp -rv ./ $build_dir
+popd
+
+exit 0

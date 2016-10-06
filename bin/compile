@@ -28,7 +28,7 @@ cached_build_dir=$base_dir/proxychains-ng-$version_tag
 
 if [[ ! -d $cached_build_dir ]]; then
     make clean
-    git co $version_tag
+    git checkout $version_tag
     ./configure --prefix=/app/vendor/proxychains-ng
     make
     DESTDIR=$cached_build_dir make install
